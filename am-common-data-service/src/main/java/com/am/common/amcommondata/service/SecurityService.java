@@ -1,7 +1,9 @@
 package com.am.common.amcommondata.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -90,6 +92,36 @@ public class SecurityService {
         }
         
         return savedDocuments.stream()
+                .map(securityMapper::toModel)
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * Find securities by a list of symbols, returning the latest version of each security based on audit creation time.
+     * 
+     * @param symbols List of security symbols to search for
+     * @return List of SecurityModel objects, with the latest version of each security
+     */
+    public List<SecurityModel> findBySymbols(List<String> symbols) {
+        if (symbols == null || symbols.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // Get all matching securities sorted by audit.createdAt in descending order
+        List<SecurityDocument> allSecurities = securityRepository.findBySymbols(symbols);
+        
+        // Group by symbol and take the first (latest) entry for each symbol
+        Map<String, SecurityDocument> latestBySymbol = new HashMap<>();
+        
+        for (SecurityDocument doc : allSecurities) {
+            String symbol = doc.getKey().getSymbol();
+            if (!latestBySymbol.containsKey(symbol)) {
+                latestBySymbol.put(symbol, doc);
+            }
+        }
+        
+        // Convert documents to models
+        return latestBySymbol.values().stream()
                 .map(securityMapper::toModel)
                 .collect(Collectors.toList());
     }

@@ -22,7 +22,7 @@ Add the following dependency to your `pom.xml`:
 <dependency>
     <groupId>com.yourcompany.library</groupId>
     <artifactId>common-library</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.2.6-SNAPSHOT</version>
 </dependency>
 ```
 

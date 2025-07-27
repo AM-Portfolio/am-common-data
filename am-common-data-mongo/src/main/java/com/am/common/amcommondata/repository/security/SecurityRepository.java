@@ -44,4 +44,7 @@ public interface SecurityRepository extends BaseRepository<SecurityDocument> {
     @Query(value = "{$and: [{'metadata.marketCapValue': {$gte: ?0}}, {'metadata.sector': ?1}, {'metadata.tradingStatus': 'ACTIVE'}]}", 
            sort = "{'audit.createdAt': -1}")
     List<SecurityDocument> findActiveLargeCapsByMinMarketCapAndSector(Long minMarketCap, String sector);
+    
+    @Query(value = "{'key.symbol': {$in: ?0}}", sort = "{'audit.createdAt': -1}")
+    List<SecurityDocument> findBySymbols(List<String> symbols);
 }
