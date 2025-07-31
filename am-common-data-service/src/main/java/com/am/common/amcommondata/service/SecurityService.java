@@ -8,7 +8,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.am.common.amcommondata.document.security.SecurityDocument;
@@ -22,63 +23,91 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityService {
     
+    private static final Logger log = LoggerFactory.getLogger(SecurityService.class);
+    
     private final SecurityRepository securityRepository;
     private final SecurityModelMapper securityMapper;
     private final AuditService auditService;
-    private final MongoTemplate mongoTemplate;
+   
 
     public SecurityModel save(SecurityModel securityModel) {
+        log.info("Saving security model: {}", securityModel.getKey());
         SecurityDocument document = securityMapper.toDocument(securityModel);
         auditService.updateAudit(document);
-        return securityMapper.toModel(mongoTemplate.save(document));
+        SecurityModel result = securityMapper.toModel(securityRepository.save(document));
+        log.debug("Successfully saved security with ID: {}", result.getId());
+        return result;
     }
 
     public Optional<SecurityModel> findById(UUID id) {
-        return securityRepository.findById(id.toString())
+        log.info("Finding security by ID: {}", id);
+        Optional<SecurityModel> result = securityRepository.findById(id.toString())
                 .map(securityMapper::toModel);
+        log.debug("Found security by ID {}: {}", id, result.isPresent());
+        return result;
     }
 
     public Optional<SecurityModel> findBySymbol(String symbol) {
-        return securityRepository.findBySymbol(symbol).stream()
+        log.info("Finding security by symbol: {}", symbol);
+        Optional<SecurityModel> result = securityRepository.findBySymbol(symbol).stream()
                 .findFirst()
                 .map(securityMapper::toModel);
+        log.debug("Found security by symbol {}: {}", symbol, result.isPresent());
+        return result;
     }
 
     public Optional<SecurityModel> findByKey(String key) {
-        return securityRepository.findByKey(key).stream()
+        log.info("Finding security by key: {}", key);
+        Optional<SecurityModel> result = securityRepository.findByKey(key).stream()
                 .findFirst()
                 .map(securityMapper::toModel);
+        log.debug("Found security by key {}: {}", key, result.isPresent());
+        return result;
     }
 
     public Optional<SecurityModel> findByIsin(String isin) {
-        return securityRepository.findByIsin(isin).stream()
+        log.info("Finding security by ISIN: {}", isin);
+        Optional<SecurityModel> result = securityRepository.findByIsin(isin).stream()
                 .findFirst()
                 .map(securityMapper::toModel);
+        log.debug("Found security by ISIN {}: {}", isin, result.isPresent());
+        return result;
     }
 
     public List<SecurityModel> findActiveLargeCapsByMinMarketCapAndSector(Long minMarketCap, String sector) {
-        return securityRepository.findActiveLargeCapsByMinMarketCapAndSector(minMarketCap, sector)
+        log.info("Finding active large caps by minimum market cap: {} and sector: {}", minMarketCap, sector);
+        List<SecurityModel> results = securityRepository.findActiveLargeCapsByMinMarketCapAndSector(minMarketCap, sector)
                 .stream()
                 .map(securityMapper::toModel)
                 .collect(Collectors.toList());
+        log.debug("Found {} active large cap securities for sector: {} with minimum market cap: {}", results.size(), sector, minMarketCap);
+        return results;
     }
 
     public List<SecurityModel> findAllVersionsById(UUID id) {
-        return securityRepository.findAllVersionsById(id.toString())
+        log.info("Finding all versions of security by ID: {}", id);
+        List<SecurityModel> results = securityRepository.findAllVersionsById(id.toString())
                 .stream()
                 .map(securityMapper::toModel)
                 .collect(Collectors.toList());
+        log.debug("Found {} versions of security with ID: {}", results.size(), id);
+        return results;
     }
 
     public void deleteById(UUID id) {
+        log.info("Deleting security by ID: {}", id);
         securityRepository.deleteById(id.toString());
+        log.debug("Successfully deleted security with ID: {}", id);
     }
 
     public void deleteAll() {
+        log.info("Deleting all securities");
         securityRepository.deleteAll();
+        log.debug("Successfully deleted all securities");
     }
 
     public List<SecurityModel> saveAll(List<SecurityModel> securities) {
+        log.info("Saving batch of {} securities", securities.size());
         List<SecurityDocument> documents = securities.stream()
                 .map(securityMapper::toDocument)
                 .peek(auditService::updateAudit)
@@ -88,12 +117,15 @@ public class SecurityService {
         for (int i = 0; i < documents.size(); i += 100) {
             int end = Math.min(i + 100, documents.size());
             List<SecurityDocument> batch = documents.subList(i, end);
-            savedDocuments.addAll(mongoTemplate.insertAll(batch));
+            log.debug("Saving batch of securities from index {} to {}", i, end - 1);
+            savedDocuments.addAll(securityRepository.saveAll(batch));
         }
         
-        return savedDocuments.stream()
+        List<SecurityModel> result = savedDocuments.stream()
                 .map(securityMapper::toModel)
                 .collect(Collectors.toList());
+        log.debug("Successfully saved {} securities", result.size());
+        return result;
     }
     
     /**
@@ -102,27 +134,56 @@ public class SecurityService {
      * @param symbols List of security symbols to search for
      * @return List of SecurityModel objects, with the latest version of each security
      */
+    /**
+     * Find securities by a list of symbols, returning the latest version of each security based on audit creation time.
+     * This method is designed to work reliably when used as a dependency in other services.
+     * 
+     * @param symbols List of security symbols to search for
+     * @return List of SecurityModel objects, with the latest version of each security
+     */
     public List<SecurityModel> findBySymbols(List<String> symbols) {
+        log.info("Finding securities by symbols: {}", symbols);
         if (symbols == null || symbols.isEmpty()) {
+            log.debug("Empty symbols list provided, returning empty result");
             return new ArrayList<>();
         }
         
-        // Get all matching securities sorted by audit.createdAt in descending order
-        List<SecurityDocument> allSecurities = securityRepository.findBySymbols(symbols);
-        
-        // Group by symbol and take the first (latest) entry for each symbol
-        Map<String, SecurityDocument> latestBySymbol = new HashMap<>();
-        
-        for (SecurityDocument doc : allSecurities) {
-            String symbol = doc.getKey().getSymbol();
-            if (!latestBySymbol.containsKey(symbol)) {
-                latestBySymbol.put(symbol, doc);
+        try {
+            // Get all matching securities sorted by audit.createdAt in descending order
+            log.debug("Querying repository for securities with symbols: {}", symbols);
+            List<SecurityDocument> allSecurities = securityRepository.findBySymbols(symbols);
+            
+            if (allSecurities == null) {
+                log.warn("Repository returned null for findBySymbols with symbols: {}", symbols);
+                return new ArrayList<>();
             }
+            
+            log.debug("Found {} security documents for {} requested symbols", allSecurities.size(), symbols.size());
+            
+            // Group by symbol and take the first (latest) entry for each symbol
+            Map<String, SecurityDocument> latestBySymbol = new HashMap<>();
+            
+            for (SecurityDocument doc : allSecurities) {
+                if (doc != null && doc.getKey() != null && doc.getKey().getSymbol() != null) {
+                    String symbol = doc.getKey().getSymbol();
+                    if (!latestBySymbol.containsKey(symbol)) {
+                        latestBySymbol.put(symbol, doc);
+                    }
+                } else {
+                    log.warn("Encountered invalid security document: {}", doc);
+                }
+            }
+            
+            // Convert documents to models
+            List<SecurityModel> result = latestBySymbol.values().stream()
+                    .map(securityMapper::toModel)
+                    .collect(Collectors.toList());
+                    
+            log.debug("Returning {} unique securities after filtering for latest versions", result.size());
+            return result;
+        } catch (Exception e) {
+            log.error("Error finding securities by symbols: {}", symbols, e);
+            return new ArrayList<>();
         }
-        
-        // Convert documents to models
-        return latestBySymbol.values().stream()
-                .map(securityMapper::toModel)
-                .collect(Collectors.toList());
     }
 }
