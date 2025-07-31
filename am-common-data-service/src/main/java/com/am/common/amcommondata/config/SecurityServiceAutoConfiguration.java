@@ -39,10 +39,9 @@ public class SecurityServiceAutoConfiguration {
             SecurityRepository securityRepository,
             SecurityModelMapper securityMapper,
             AuditService auditService,
-            MongoTemplate mongoTemplate,
             SecurityServiceProperties properties) {
         
         log.info("Initializing SecurityService with properties: {}", properties);
-        return new SecurityService(securityRepository, securityMapper, auditService, mongoTemplate);
+        return new SecurityService(securityRepository, securityMapper, auditService);
     }
 }
