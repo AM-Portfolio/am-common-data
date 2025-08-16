@@ -14,7 +14,7 @@
         <module>am-common-data-model</module>
         <module>am-common-data-persistence</module>
         <module>am-common-data-service</module>
-        <!-- <module>am-common-data-app</module> -->
+        <module>am-common-data-app</module>
         <module>am-common-data-mongo</module>
     </modules>
 

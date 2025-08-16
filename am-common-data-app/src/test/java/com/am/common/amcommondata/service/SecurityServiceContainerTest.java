@@ -5,8 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -120,6 +122,47 @@ class SecurityServiceContainerTest {
                                      .containsExactly("AAPL", "MSFT");
         assertThat(largeTechCompanies).extracting(s -> s.getMetadata().getMarketCapValue())
                                      .allMatch(cap -> cap >= 2000000000000L);
+    }
+    
+    @Test
+    void shouldFindSecuritiesBySymbols() {
+        // Given
+        SecurityModel apple = createTestSecurityModel(); // AAPL
+        apple.setId(UUID.randomUUID()); // Ensure unique ID
+        
+        SecurityModel microsoft = createTestSecurityModel();
+        microsoft.setId(UUID.randomUUID()); // Ensure unique ID
+        microsoft.getKey().setSymbol("MSFT");
+        microsoft.getKey().setIsin("US5949181045");
+        microsoft.getCompanyInfo().setLegalName("Microsoft Corporation");
+        
+        // Save securities individually to avoid batch issues
+        securityService.save(apple);
+        securityService.save(microsoft);
+        
+        // When - Find securities by symbols
+        List<SecurityModel> foundSecurities = securityService.findBySymbols(List.of("AAPL", "MSFT", "UNKNOWN"));
+        
+        // Then
+        assertThat(foundSecurities).isNotNull();
+        assertThat(foundSecurities.size()).isEqualTo(2);
+        
+        // Extract symbols for easier assertion
+        List<String> foundSymbols = foundSecurities.stream()
+            .map(s -> s.getKey().getSymbol())
+            .collect(Collectors.toList());
+            
+        assertThat(foundSymbols).contains("AAPL", "MSFT");
+        
+        // Verify company names by finding each security in the result list
+        for (SecurityModel security : foundSecurities) {
+            String symbol = security.getKey().getSymbol();
+            if ("AAPL".equals(symbol)) {
+                assertThat(security.getCompanyInfo().getLegalName()).isEqualTo("Apple Inc.");
+            } else if ("MSFT".equals(symbol)) {
+                assertThat(security.getCompanyInfo().getLegalName()).isEqualTo("Microsoft Corporation");
+            }
+        }
     }
 
     private SecurityModel createTestSecurityModel() {

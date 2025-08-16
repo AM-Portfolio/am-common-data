@@ -29,20 +29,20 @@ import org.testcontainers.junit.jupiter.Container;
 })
 @Import(MongoTestConfig.class)
 public class TestConfig {
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15.2")
-            .withDatabaseName("testdb")
-            .withUsername("test")
-            .withPassword("test");
+    // @Container
+    // static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15.2")
+    //         .withDatabaseName("testdb")
+    //         .withUsername("test")
+    //         .withPassword("test");
 
-    static {
-        postgres.start();
-    }
+    // static {
+    //     postgres.start();
+    // }
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-    }
+    // @DynamicPropertySource
+    // static void configureProperties(DynamicPropertyRegistry registry) {
+    //     registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    //     registry.add("spring.datasource.username", postgres::getUsername);
+    //     registry.add("spring.datasource.password", postgres::getPassword);
+    // }
 }
