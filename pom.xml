@@ -7,12 +7,12 @@
          
     <groupId>com.am.common</groupId>
     <artifactId>am-common-data-parent</artifactId>
-    <version>1.2.8-SNAPSHOT</version>
+    <version>1.2.9-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
         <module>am-common-data-model</module>
-        <module>am-common-data-persistence</module>
+        <!-- <module>am-common-data-persistence</module> -->
         <module>am-common-data-service</module>
         <module>am-common-data-app</module>
         <module>am-common-data-mongo</module>
@@ -111,12 +111,12 @@
             </dependency>
 
             <!-- Database -->
-            <dependency>
+            <!-- <dependency>
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${postgresql.version}</version>
                 <scope>runtime</scope>
-            </dependency>
+            </dependency> -->
 
             <!-- Testing -->
             <dependency>

@@ -7,7 +7,6 @@ import com.am.common.amcommondata.repository.portfolio.PortfolioDocumentReposito
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -20,7 +19,6 @@ import java.util.stream.Collectors;
 public class PortfolioServiceImpl implements PortfolioService {
     private final PortfolioDocumentRepository portfolioDocumentRepository;
     private final PortfolioMapper portfolioMapper;
-    private final MongoTemplate mongoTemplate;
 
     @Override
     public List<PortfolioModelV1> getPortfoliosByUserId(String userId) {
@@ -39,6 +37,6 @@ public class PortfolioServiceImpl implements PortfolioService {
     @Transactional
     public PortfolioModelV1 createPortfolio(PortfolioModelV1 portfolioModel) {
         PortfolioDocument document = portfolioMapper.toDocument(portfolioModel);
-        return portfolioMapper.toModel(mongoTemplate.save(document));
+        return portfolioMapper.toModel(portfolioDocumentRepository.save(document));
     }
 }
