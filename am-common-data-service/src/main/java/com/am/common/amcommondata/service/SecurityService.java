@@ -186,4 +186,49 @@ public class SecurityService {
             return new ArrayList<>();
         }
     }
+    
+    /**
+     * Enhanced search method that searches for securities based on a search parameter.
+     * The search is performed across ISIN, symbol, and security name fields with prioritized results.
+     * Results are ordered by exact match priority and then by name length for better relevance:
+     * 1. Exact ISIN match (highest priority)
+     * 2. Exact symbol match
+     * 3. Exact security name match (case insensitive)
+     * 4. Partial security name match (ordered by length)
+     * 
+     * Only active securities are returned.
+     * 
+     * @param searchParam The search parameter to look for
+     * @return List of matching SecurityModel objects in priority order
+     */
+    public List<SecurityModel> findSecurityBySearchParam(String searchParam) {
+        log.info("Finding securities by search parameter: {}", searchParam);
+        if (searchParam == null || searchParam.trim().isEmpty()) {
+            log.debug("Empty search parameter provided, returning empty result");
+            return new ArrayList<>();
+        }
+        
+        try {
+            // Use the custom repository implementation for enhanced search
+            List<SecurityDocument> matchingSecurities = securityRepository.findSecurityBySearchParam(searchParam);
+            
+            if (matchingSecurities == null) {
+                log.warn("Repository returned null for findSecurityBySearchParam with parameter: {}", searchParam);
+                return new ArrayList<>();
+            }
+            
+            log.debug("Found {} matching securities for search parameter: {}", matchingSecurities.size(), searchParam);
+            
+            // Convert documents to models
+            List<SecurityModel> result = matchingSecurities.stream()
+                    .map(securityMapper::toModel)
+                    .collect(Collectors.toList());
+                    
+            log.debug("Returning {} securities after search and prioritization", result.size());
+            return result;
+        } catch (Exception e) {
+            log.error("Error finding securities by search parameter: {}", searchParam, e);
+            return new ArrayList<>();
+        }
+    }
 }

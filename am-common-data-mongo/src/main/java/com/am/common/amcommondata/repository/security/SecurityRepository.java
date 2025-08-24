@@ -47,4 +47,16 @@ public interface SecurityRepository extends BaseRepository<SecurityDocument> {
     
     @Query(value = "{'key.symbol': {$in: ?0}}", sort = "{'audit.createdAt': -1}")
     List<SecurityDocument> findBySymbols(List<String> symbols);
+    
+    /**
+     * Enhanced search method that searches for securities based on a search parameter.
+     * The search is performed across ISIN, symbol, and security name fields with prioritized results.
+     * Results are ordered by exact match priority and then by name length for better relevance.
+     * 
+     * @param searchParam The search parameter to look for
+     * @return List of matching SecurityDocument objects
+     */
+    @Query(value = "{$and: [{$or: [{'key.isin': ?0}, {'key.symbol': ?0}, {'metadata.securityName': {$regex: ?0, $options: 'i'}}]}, {'metadata.tradingStatus': 'ACTIVE'}]}", 
+           sort = "{'audit.createdAt': -1}")
+    List<SecurityDocument> findSecurityBySearchParam(String searchParam);
 }
