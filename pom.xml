@@ -7,13 +7,15 @@
          
     <groupId>com.am.common</groupId>
     <artifactId>am-common-data-parent</artifactId>
-    <version>1.2.0-SNAPSHOT</version>
+    <version>1.2.10-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
         <module>am-common-data-model</module>
-        <module>am-common-data-persistence</module>
+        <!-- <module>am-common-data-persistence</module> -->
         <module>am-common-data-service</module>
+        <module>am-common-data-app</module>
+        <module>am-common-data-mongo</module>
     </modules>
 
     <properties>
@@ -21,13 +23,16 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring-boot.version>2.7.0</spring-boot.version>
+        <spring-boot.version>3.1.0</spring-boot.version>
         <mapstruct.version>1.5.3.Final</mapstruct.version>
-        <lombok.version>1.18.22</lombok.version>
+        <lombok.version>1.18.30</lombok.version>
         <jakarta.persistence.version>3.1.0</jakarta.persistence.version>
         <jakarta.validation.version>3.0.2</jakarta.validation.version>
-        <jackson.version>2.13.0</jackson.version>
-        <slf4j.version>1.7.32</slf4j.version>
+        <jackson.version>2.15.0</jackson.version>
+        <slf4j.version>2.0.7</slf4j.version>
+        <testcontainers.version>1.19.3</testcontainers.version>
+        <postgresql.version>42.7.1</postgresql.version>
+        <assertj.version>3.24.2</assertj.version>
     </properties>
 
     <dependencyManagement>
@@ -36,6 +41,11 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-web</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-data-mongodb</artifactId>
                 <version>${spring-boot.version}</version>
             </dependency>
             <dependency>
@@ -100,11 +110,37 @@
                 <version>${slf4j.version}</version>
             </dependency>
 
+            <!-- Database -->
+            <!-- <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
+                <scope>runtime</scope>
+            </dependency> -->
+
             <!-- Testing -->
             <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>4.13.2</version>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-test</artifactId>
+                <version>${spring-boot.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${testcontainers.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

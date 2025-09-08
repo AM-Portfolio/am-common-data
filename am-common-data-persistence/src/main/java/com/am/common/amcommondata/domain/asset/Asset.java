@@ -2,10 +2,13 @@ package com.am.common.amcommondata.domain.asset;
 
 import com.am.common.amcommondata.domain.portfolio.Portfolio;
 import com.am.common.amcommondata.model.enums.AssetType;
+import com.am.common.amcommondata.model.enums.BrokerType;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -17,7 +20,7 @@ import org.hibernate.annotations.GenericGenerator;
 @NoArgsConstructor
 @Inheritance(strategy = InheritanceType.JOINED)
 @Table(name = "assets")
-public abstract class Asset {
+public class Asset {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(
@@ -30,14 +33,16 @@ public abstract class Asset {
     @Column(nullable = false)
     private String symbol;
 
+    @Column(nullable = false)
     private String isin;
 
-    @Column(nullable = false)
     private String name;
 
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "portfolio_id")
     private Portfolio portfolio;
 
@@ -49,18 +54,21 @@ public abstract class Asset {
     private Double avgBuyingPrice;
     private Double currentValue;
     private Double investmentValue;
-    private String buyingPlatform;
-    private String broker;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "broker_type", nullable = false)
+    private BrokerType brokerType;
+
     private String exchange;
     private String sector;
     private String industry;
+    private String marketType;
     private String currency;
     private String country;
     private String tags;
     private String notes;
     private String status;
     private LocalDateTime purchaseDate;
-    private LocalDateTime lastUpdated;
     private LocalDateTime maturityDate;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;

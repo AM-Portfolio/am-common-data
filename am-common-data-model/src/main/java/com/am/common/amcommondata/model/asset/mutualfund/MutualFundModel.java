@@ -6,14 +6,17 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import java.time.LocalDate;
 
 @Data
 @SuperBuilder
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonInclude(Include.NON_NULL)
 public class MutualFundModel extends AssetModel {
+    private String isin;
     private String fundHouse;
     private String category; // Equity, Debt, Hybrid, etc.
     private String subCategory;

@@ -3,6 +3,7 @@ package com.am.common.amcommondata.model.asset.common;
 import lombok.Data;
 import lombok.Builder;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -11,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 @Builder
 @JsonInclude(Include.NON_NULL)
 public class TimeSeriesDataModel {
-    private Long id;
+    private UUID id;
     private LocalDateTime timestamp;
     private String timeframe;
     private OHLCVModel ohlcv;
